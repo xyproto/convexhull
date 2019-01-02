@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math"
 	"sort"
-
-	"github.com/go-gl/gl"
 )
 
 type Point struct {
@@ -119,33 +117,4 @@ func isLeft(p0, p1, p2 Point) bool {
 
 func Area2(a, b, c Point) float64 {
 	return (b.X-a.X)*(c.Y-a.Y) - (c.X-a.X)*(b.Y-a.Y)
-}
-
-func (points PointList) DrawPoints() {
-	gl.Begin(gl.POINTS)
-	for _, p := range points {
-		gl.Color3f(1, 0, 0)
-		gl.Vertex2f(float32(p.X), float32(p.Y))
-	}
-	gl.End()
-}
-
-func (points PointList) DrawLines() {
-	gl.Begin(gl.LINE_LOOP)
-	for _, p := range points {
-		gl.Color3f(0, 0, 1)
-		gl.Vertex2f(float32(p.X), float32(p.Y))
-	}
-	gl.End()
-}
-
-func (points PointList) DrawLowestPoint() {
-	if len(points) <= 0 {
-		return
-	}
-
-	gl.Begin(gl.POINTS)
-	gl.Color3f(0, 0, 0)
-	gl.Vertex2f(float32(points[0].X), float32(points[0].Y))
-	gl.End()
 }

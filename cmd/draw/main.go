@@ -5,22 +5,25 @@ import (
 
 	"github.com/go-gl/gl"
 	"github.com/go-gl/glfw"
-	"github.com/hemantasapkota/glu"
+	"github.com/go-gl/glu"
 
-	"./convexhull"
+	"github.com/xyproto/convexhull"
 )
 
 const (
 	Title  = "Convex Hull in 2D"
+
 	Width  = 840
 	Height = 630
 	HW     = Width / 2
 	HH     = Height / 2
 )
 
-var running, drawHull bool
-var points, hull convexhull.PointList
-var px, py float64
+var (
+	running, drawHull bool
+	points, hull convexhull.PointList
+	px, py float64
+)
 
 func main() {
 	var err error
@@ -88,7 +91,10 @@ func onCursor(x, y int) {
 func onMouse(button, state int) {
 	if state == 1 {
 		points = append(points, convexhull.MakePoint(px, py))
-		hull, _ = points.Compute()
+		hull, err = points.Compute()
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
@@ -139,7 +145,7 @@ func drawScene() {
 	gl.LoadIdentity()
 
 	points.DrawPoints()
-	points.DrawLowestPoint()
+	DrawLowestPoint(points)
 
 	if drawHull {
 		hull.DrawLines()
@@ -150,3 +156,34 @@ func drawScene() {
 
 	glfw.SwapBuffers()
 }
+
+func DrawLowestPoint(points PointList) {
+	if len(points) <= 0 {
+		return
+	}
+
+	gl.Begin(gl.POINTS)
+	gl.Color3f(0, 0, 0)
+	gl.Vertex2f(float32(points[0].X), float32(points[0].Y))
+	gl.End()
+}
+
+func DrawPoints(points PointList) {
+	gl.Begin(gl.POINTS)
+	for _, p := range points {
+		gl.Color3f(1, 0, 0)
+		gl.Vertex2f(float32(p.X), float32(p.Y))
+	}
+	gl.End()
+}
+
+func DrawLines(points PointList) {
+	gl.Begin(gl.LINE_LOOP)
+	for _, p := range points {
+		gl.Color3f(0, 0, 1)
+		gl.Vertex2f(float32(p.X), float32(p.Y))
+	}
+	gl.End()
+}
+
+
