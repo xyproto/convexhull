@@ -4,11 +4,11 @@ import (
 	"fmt"
 )
 
-func ExampleCompute() {
+func Example() {
 	ps := Points{
-		Point{0, 0},
-		Point{1, 2},
-		Point{3, 4},
+		&Point{0, 0},
+		&Point{1, 2},
+		&Point{3, 4},
 	}
 	newPoints, err := ps.Compute()
 	if err != nil {

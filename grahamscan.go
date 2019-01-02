@@ -1,25 +1,27 @@
 package convexhull
 
 import (
+	"fmt"
 	"math"
 	"sort"
+	"strings"
 )
 
 type Point struct {
 	X, Y float64
 }
 
-type Points []Point
+type Points []*Point
 
 func New(x, y float64) *Point {
 	return &Point{X: x, Y: y}
 }
 
-func isLeft(p0, p1, p2 Point) bool {
+func isLeft(p0, p1, p2 *Point) bool {
 	return Area2(p0, p1, p2) > 0
 }
 
-func Area2(a, b, c Point) float64 {
+func Area2(a, b, c *Point) float64 {
 	return (b.X-a.X)*(c.Y-a.Y) - (c.X-a.X)*(b.Y-a.Y)
 }
 
@@ -71,7 +73,8 @@ func (ps Points) Compute() (Points, error) {
 		return nil, nil
 	}
 
-	stack := new(Stack)
+	stack := &PointStack{}
+
 	ps.Lowest()
 	sort.Sort(&ps)
 
@@ -86,8 +89,8 @@ func (ps Points) Compute() (Points, error) {
 
 		//PrintStack(stack)
 
-		p1 := stack.top.next.value.(Point)
-		p2 := stack.top.value.(Point)
+		p1 := stack.top.next.value
+		p2 := stack.top.value
 
 		if isLeft(p1, p2, pi) {
 			stack.Push(pi)
@@ -100,12 +103,26 @@ func (ps Points) Compute() (Points, error) {
 	// Copy the hull
 	ret := make(Points, stack.Len())
 	top := stack.top
-	count := 0
+
+	var count int
 	for top != nil {
-		ret[count] = top.value.(Point)
+		ret[count] = top.value
 		top = top.next
 		count++
 	}
 
 	return ret, nil
+}
+
+func (ps Points) String() string {
+	var sb strings.Builder
+	sb.WriteString("[")
+	for i, p := range ps {
+		if i > 0 {
+			sb.WriteString(" ")
+		}
+		sb.WriteString(fmt.Sprintf("{%v %v}", p.X, p.Y))
+	}
+	sb.WriteString("]")
+	return sb.String()
 }
