@@ -1,6 +1,7 @@
 package convexhull
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -17,11 +18,11 @@ func New(x, y float64) *Point {
 	return &Point{X: x, Y: y}
 }
 
-func isLeft(p0, p1, p2 *Point) bool {
+func isLeft(p0, p1, p2 Point) bool {
 	return Area2(p0, p1, p2) > 0
 }
 
-func Area2(a, b, c *Point) float64 {
+func Area2(a, b, c Point) float64 {
 	return (b.X-a.X)*(c.Y-a.Y) - (c.X-a.X)*(b.Y-a.Y)
 }
 
@@ -35,7 +36,7 @@ func (ps Points) Swap(i, j int) {
 }
 
 func (ps Points) Less(i, j int) bool {
-	area := Area2(ps[0], ps[i], ps[j])
+	area := Area2(*(ps[0]), *(ps[i]), *(ps[j]))
 
 	if area == 0 {
 		x := math.Abs(ps[i].X-ps[0].X) - math.Abs(ps[j].X-ps[0].X)
@@ -70,22 +71,22 @@ func (ps Points) Lowest() {
 
 func (ps Points) Compute() (Points, error) {
 	if len(ps) < 3 {
-		return nil, nil
+		return nil, errors.New("Too few points")
 	}
 
-	stack := &PointStack{}
+	stack := new(PointStack)
 
 	ps.Lowest()
 	sort.Sort(&ps)
 
-	stack.Push(ps[0])
-	stack.Push(ps[1])
+	stack.Push(*(ps[0]))
+	stack.Push(*(ps[1]))
 
 	//fmt.Printf("Sorted Points: %v\n", ps)
 
 	i := 2
 	for i < len(ps) {
-		pi := ps[i]
+		pi := *(ps[i])
 
 		//PrintStack(stack)
 
@@ -106,7 +107,7 @@ func (ps Points) Compute() (Points, error) {
 
 	var count int
 	for top != nil {
-		ret[count] = top.value
+		ret[count] = &(top.value)
 		top = top.next
 		count++
 	}

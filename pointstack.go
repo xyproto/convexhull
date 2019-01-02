@@ -3,6 +3,7 @@ package convexhull
 // Based on the Stack implementation from https://gist.github.com/bemasher/1777766
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -12,7 +13,7 @@ type PointStack struct {
 }
 
 type Element struct {
-	value *Point
+	value Point
 	next  *Element
 }
 
@@ -22,20 +23,21 @@ func (s *PointStack) Len() int {
 }
 
 // Push a new element onto the stack
-func (s *PointStack) Push(value *Point) {
+func (s *PointStack) Push(value Point) {
 	s.top = &Element{value, s.top}
 	s.size++
 }
 
 // Remove the top element from the stack and return it's value
 // If the stack is empty, return nil
-func (s *PointStack) Pop() (value *Point) {
+func (s *PointStack) Pop() (Point, error) {
+	var value Point
 	if s.size > 0 {
 		value, s.top = s.top.value, s.top.next
 		s.size--
-		return
+		return value, nil
 	}
-	return nil
+	return value, errors.New("empty")
 }
 
 func PrintPointStack(s *PointStack) {
