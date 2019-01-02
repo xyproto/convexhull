@@ -2,6 +2,10 @@
 // https://gist.github.com/bemasher/1777766
 package convexhull
 
+import (
+	"fmt"
+)
+
 type Stack struct {
 	top  *Element
 	size int
@@ -32,4 +36,14 @@ func (s *Stack) Pop() (value interface{}) {
 		return
 	}
 	return nil
+}
+
+func PrintStack(s *Stack) {
+	v := s.top
+	fmt.Printf("Stack: ")
+	for v != nil {
+		fmt.Printf("%v ", v.value)
+		v = v.next
+	}
+	fmt.Println("")
 }

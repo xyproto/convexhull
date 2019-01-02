@@ -1,11 +1,10 @@
 package main
 
 import (
-	"log"
-
-	"github.com/go-gl/gl"
-	"github.com/go-gl/glfw"
-	"github.com/go-gl/glu"
+	"fmt"
+	"runtime"
+	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/glfw/v3.2/glfw"
 
 	"github.com/xyproto/convexhull"
 )
@@ -25,38 +24,55 @@ var (
 	px, py float64
 )
 
-func main() {
-	var err error
-	if err = glfw.Init(); err != nil {
-		log.Fatalf("%v\n", err)
-		return
-	}
+func init() {
+	// This is needed to arrange that main() runs on main thread.
+	// See documentation for functions that are only allowed to be called from the main thread.
+	runtime.LockOSThread()
+}
 
+func main() {
+	err := glfw.Init()
+	if err != nil {
+		panic(err)
+	}
 	defer glfw.Terminate()
 
-	if err = glfw.OpenWindow(Width, Height, 8, 8, 8, 8, 0, 8, glfw.Windowed); err != nil {
-		log.Fatalf("%v\n", err)
-		return
+	window, err := glfw.CreateWindow(Width, Height, Title, nil, nil)
+	if err != nil {
+		panic(err)
 	}
 
-	defer glfw.CloseWindow()
-
-	glfw.SetSwapInterval(1)
-	glfw.SetWindowTitle(Title)
-	glfw.SetWindowSizeCallback(onResize)
-	glfw.SetKeyCallback(onKey)
-	glfw.SetMouseButtonCallback(onMouse)
-	glfw.SetMousePosCallback(onCursor)
+	window.MakeContextCurrent()
 
 	initGL()
 
-	running = true
-	for running && glfw.WindowParam(glfw.Opened) == 1 {
+	window.SetKeyCallback(onKey)
+
+	for !window.ShouldClose() {
+		// Do OpenGL stuff.
 		drawScene()
+
+		window.SwapBuffers()
+		glfw.PollEvents()
 	}
 }
 
-func onResize(w, h int) {
+//	glfw.SetSwapInterval(1)
+//	glfw.SetWindowSizeCallback(onResize)
+//	glfw.SetKeyCallback(onKey)
+//	glfw.SetMouseButtonCallback(onMouse)
+//	glfw.SetMousePosCallback(onCursor)
+//
+//	initGL()
+//
+//	for running && !window.ShouldClose() {
+//		drawScene()
+//		window.SwapBuffers()
+//		glfw.PollEvents()
+//	}
+//}
+
+func onResize(w, h int32) {
 	if h == 0 {
 		h = 1
 	}
@@ -64,14 +80,15 @@ func onResize(w, h int) {
 	gl.Viewport(0, 0, w, h)
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
-	glu.Ortho2D(0, float64(w), float64(h), 0)
+	gl.Ortho(0 ,float64(w), float64(h), 0, -1, 1)
+	//glu.Ortho2D(0, float64(w), float64(h), 0)
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
 }
 
-func onKey(key, state int) {
+func onKey(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	switch key {
-	case glfw.KeyEsc:
+	case glfw.KeyEscape:
 		running = false
 
 	case 'H':
@@ -89,11 +106,12 @@ func onCursor(x, y int) {
 }
 
 func onMouse(button, state int) {
+	var ok bool
 	if state == 1 {
 		points = append(points, convexhull.MakePoint(px, py))
-		hull, err = points.Compute()
-		if err != nil {
-			fmt.Println(err)
+		hull, ok = points.Compute()
+		if !ok {
+			fmt.Println("does not compute")
 		}
 	}
 }
@@ -144,20 +162,18 @@ func drawScene() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.LoadIdentity()
 
-	points.DrawPoints()
+	DrawPoints(points)
 	DrawLowestPoint(points)
 
 	if drawHull {
-		hull.DrawLines()
+		DrawLines(hull)
 	}
 
 	//Print cartesian
 	drawCartesian()
-
-	glfw.SwapBuffers()
 }
 
-func DrawLowestPoint(points PointList) {
+func DrawLowestPoint(points convexhull.PointList) {
 	if len(points) <= 0 {
 		return
 	}
@@ -168,7 +184,7 @@ func DrawLowestPoint(points PointList) {
 	gl.End()
 }
 
-func DrawPoints(points PointList) {
+func DrawPoints(points convexhull.PointList) {
 	gl.Begin(gl.POINTS)
 	for _, p := range points {
 		gl.Color3f(1, 0, 0)
@@ -177,7 +193,7 @@ func DrawPoints(points PointList) {
 	gl.End()
 }
 
-func DrawLines(points PointList) {
+func DrawLines(points convexhull.PointList) {
 	gl.Begin(gl.LINE_LOOP)
 	for _, p := range points {
 		gl.Color3f(0, 0, 1)
