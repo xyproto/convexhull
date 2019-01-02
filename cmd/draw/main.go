@@ -1,14 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"runtime"
-	"strings"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
-
 	"github.com/xyproto/convexhull"
 )
 
@@ -40,8 +37,6 @@ func initGlfw() *glfw.Window {
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
 	window, err := glfw.CreateWindow(width, height, title, nil, nil)
 	if err != nil {
@@ -52,176 +47,159 @@ func initGlfw() *glfw.Window {
 	return window
 }
 
-// initOpenGL initializes OpenGL and returns an intiialized program.
-func initOpenGL() uint32 {
-	if err := gl.Init(); err != nil {
-		panic(err)
-	}
-	version := gl.GoStr(gl.GetString(gl.VERSION))
-	log.Println("OpenGL version", version)
-}
-
-func draw(window *glfw.Window) {
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-}
-
 func main() {
+	panic("work in progress")
+
 	window := initGlfw()
 	defer glfw.Terminate()
 
-	initOpenGL()
+	initGL()
+
+	window.SetKeyCallback(onKey)
+	window.SetMouseButtonCallback(onMouse)
+	window.SetCursorPosCallback(onCursor)
+	window.SetSizeCallback(onResize)
+
+	glfw.SwapInterval(1)
 
 	for !window.ShouldClose() {
-		draw(window, program)
+		drawScene(window)
 		window.SwapBuffers()
 		glfw.PollEvents()
 	}
 }
 
-// ---------------------------------------------
+func onResize(win *glfw.Window, w, h int) {
+	if h == 0 {
+		h = 1
+	}
 
-// window.SetKeyCallback(onKey)
-//	for !window.ShouldClose() {
-//		drawScene()
-//		window.SwapBuffers()
-//      ...
-//		glfw.PollEvents()
-//	}
+	gl.Viewport(0, 0, int32(w), int32(h))
+	gl.MatrixMode(gl.PROJECTION)
+	gl.LoadIdentity()
+	gl.Ortho(0, float64(w), float64(h), 0, -1, 1)
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.LoadIdentity()
+}
 
-//	glfw.SetSwapInterval(1)
-//	glfw.SetWindowSizeCallback(onResize)
-//	glfw.SetKeyCallback(onKey)
-//	glfw.SetMouseButtonCallback(onMouse)
-//	glfw.SetMousePosCallback(onCursor)
-//
+func onKey(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+	switch key {
+	case glfw.KeyEscape:
+		running = false
 
-//func onResize(w, h int32) {
-//	if h == 0 {
-//		h = 1
-//	}
-//
-//	gl.Viewport(0, 0, w, h)
-//	gl.MatrixMode(gl.PROJECTION)
-//	gl.LoadIdentity()
-//	gl.Ortho(0 ,float64(w), float64(h), 0, -1, 1)
-//	//glu.Ortho2D(0, float64(w), float64(h), 0)
-//	gl.MatrixMode(gl.MODELVIEW)
-//	gl.LoadIdentity()
-//}
+	case glfw.KeyH:
+		drawHull = !drawHull
 
-//func onKey(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-//	switch key {
-//	case glfw.KeyEscape:
-//		running = false
-//
-//	case 'H':
-//		drawHull = !drawHull
-//
-//	case 'C':
-//		points, hull = nil, nil
-//		points = make(convexhull.Points, 0)
-//		hull = make(convexhull.Points, 0)
-//	}
-//}
-//
-//func onCursor(x, y int) {
-//	px, py = float64(x), float64(y)
-//}
-//
-//func onMouse(button, state int) {
-//	var ok bool
-//	if state == 1 {
-//		points = append(points, convexhull.MakePoint(px, py))
-//		hull, ok = points.Compute()
-//		if !ok {
-//			fmt.Println("does not compute")
-//		}
-//	}
-//}
-//
-//func initGL() {
-//	gl.ClearColor(1, 1, 1, 0)
-//	gl.ClearDepth(1)
-//	gl.Enable(gl.DEPTH_TEST)
-//	gl.DepthFunc(gl.LEQUAL)
-//	gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
-//
-//	gl.LineWidth(3)
-//	gl.Enable(gl.LINE_SMOOTH)
-//
-//	gl.PointSize(5)
-//	gl.Enable(gl.POINT_SMOOTH)
-//
-//	gl.Hint(gl.POINT_SMOOTH, gl.NICEST)
-//	gl.Enable(gl.BLEND)
-//	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-//
-//	points = make(convexhull.Points, 0)
-//}
+	case glfw.KeyC:
+		points, hull = nil, nil
+		points = make(convexhull.Points, 0)
+		hull = make(convexhull.Points, 0)
+	}
+}
 
-//func drawCartesian() {
-//	//Horizontal Line
-//	gl.Begin(gl.LINES)
-//	gl.Color3f(0, 0, 0)
-//	gl.Vertex2f(0, float32(HH))
-//	gl.Vertex2f(Width, float32(HH))
-//	gl.End()
-//
-//	//Vertical line
-//	gl.Begin(gl.LINES)
-//	gl.Color3f(0, 0, 0)
-//	gl.Vertex2f(float32(HW), 0)
-//	gl.Vertex2f(float32(HW), Height)
-//	gl.End()
-//
-//	//Origin
-//	gl.Begin(gl.POINTS)
-//	gl.Color3f(0, 1, 1)
-//	gl.Vertex2f(float32(HW), float32(HH))
-//	gl.End()
-//}
-//
-//func drawScene() {
-//	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-//	gl.LoadIdentity()
-//
-//	DrawPoints(points)
-//	DrawLowestPoint(points)
-//
-//	if drawHull {
-//		DrawLines(hull)
-//	}
-//
-//	//Print cartesian
-//	drawCartesian()
-//}
+func onCursor(w *glfw.Window, xpos, ypos float64) {
+	px, py = xpos, ypos
+}
 
-//func DrawLowestPoint(points convexhull.Points) {
-//	if len(points) <= 0 {
-//		return
-//	}
-//
-//	gl.Begin(gl.POINTS)
-//	gl.Color3f(0, 0, 0)
-//	gl.Vertex2f(float32(points[0].X), float32(points[0].Y))
-//	gl.End()
-//}
-//
-//func DrawPoints(points convexhull.Points) {
-//	gl.Begin(gl.POINTS)
-//	for _, p := range points {
-//		gl.Color3f(1, 0, 0)
-//		gl.Vertex2f(float32(p.X), float32(p.Y))
-//	}
-//	gl.End()
-//}
-//
-//func DrawLines(points convexhull.Points) {
-//	gl.Begin(gl.LINE_LOOP)
-//	for _, p := range points {
-//		gl.Color3f(0, 0, 1)
-//		gl.Vertex2f(float32(p.X), float32(p.Y))
-//	}
-//	gl.End()
-//}
+func onMouse(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) { // button, state int) {
+	var err error
+	if button == glfw.MouseButtonLeft {
+		points = append(points, convexhull.New(px, py))
+		hull, err = points.Compute()
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func initGL() {
+	if err := gl.Init(); err != nil {
+		panic(err)
+	}
+	version := gl.GoStr(gl.GetString(gl.VERSION))
+	log.Println("OpenGL version", version)
+
+	gl.ClearColor(1, 1, 1, 0)
+	gl.ClearDepth(1)
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LEQUAL)
+	gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
+
+	gl.LineWidth(3)
+	gl.Enable(gl.LINE_SMOOTH)
+
+	gl.PointSize(5)
+	gl.Enable(gl.POINT_SMOOTH)
+
+	gl.Hint(gl.POINT_SMOOTH, gl.NICEST)
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+	points = make(convexhull.Points, 0)
+}
+
+func drawCartesian() {
+	//Horizontal Line
+	gl.Begin(gl.LINES)
+	gl.Color3f(0, 0, 0)
+	gl.Vertex2f(0, float32(HH))
+	gl.Vertex2f(width, float32(HH))
+	gl.End()
+
+	//Vertical line
+	gl.Begin(gl.LINES)
+	gl.Color3f(0, 0, 0)
+	gl.Vertex2f(float32(HW), 0)
+	gl.Vertex2f(float32(HW), height)
+	gl.End()
+
+	//Origin
+	gl.Begin(gl.POINTS)
+	gl.Color3f(0, 1, 1)
+	gl.Vertex2f(float32(HW), float32(HH))
+	gl.End()
+}
+
+func drawScene(window *glfw.Window) {
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.LoadIdentity()
+
+	DrawPoints(points)
+	DrawLowestPoint(points)
+
+	if drawHull {
+		DrawLines(hull)
+	}
+
+	//Print cartesian
+	drawCartesian()
+}
+
+func DrawLowestPoint(points convexhull.Points) {
+	if len(points) <= 0 {
+		return
+	}
+
+	gl.Begin(gl.POINTS)
+	gl.Color3f(0, 0, 0)
+	gl.Vertex2f(float32(points[0].X), float32(points[0].Y))
+	gl.End()
+}
+
+func DrawPoints(points convexhull.Points) {
+	gl.Begin(gl.POINTS)
+	for _, p := range points {
+		gl.Color3f(1, 0, 0)
+		gl.Vertex2f(float32(p.X), float32(p.Y))
+	}
+	gl.End()
+}
+
+func DrawLines(points convexhull.Points) {
+	gl.Begin(gl.LINE_LOOP)
+	for _, p := range points {
+		gl.Color3f(0, 0, 1)
+		gl.Vertex2f(float32(p.X), float32(p.Y))
+	}
+	gl.End()
+}
